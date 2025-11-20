@@ -86,7 +86,7 @@ if (config.NODE_ENV !== 'test') {
     logger.info(`Environment: ${config.NODE_ENV}`);
     logger.info(`Process ID: ${process.pid}`);
   });
-}
+} 
 
 // Graceful shutdown handler (only if server is running)
 if (server) {
@@ -133,4 +133,3 @@ if (server) {
 }
 
 export default app;
-

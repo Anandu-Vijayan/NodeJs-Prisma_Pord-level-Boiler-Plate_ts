@@ -17,7 +17,7 @@ const runMigration = async (): Promise<void> => {
     
     // Use execSync to run prisma db push
     // This will sync the Prisma schema with the database
-    const output = execSync('npx prisma db push --skip-generate', {
+    const output = execSync('npx prisma db push', {
       encoding: 'utf-8',
       stdio: 'pipe',
       env: {
