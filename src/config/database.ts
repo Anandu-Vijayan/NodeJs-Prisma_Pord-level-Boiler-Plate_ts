@@ -1,6 +1,5 @@
 import { PrismaClient } from '@prisma/client';
 import logger from '../utilities/logger';
-import config from './env';
 import { runMigration, isAutoMigrationEnabled } from './migration';
 
 // PrismaClient is attached to the `global` object in development to prevent

@@ -7,12 +7,12 @@ module.exports = {
 
   // Test file patterns
   testMatch: [
-    '**/__tests__/**/*.test.ts',
-    '**/?(*.)+(spec|test).ts',
+    '**/__tests__/**/*.test.{ts,js}',
+    '**/?(*.)+(spec|test).{ts,js}',
   ],
 
   // Setup files
-  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup/jest.setup.ts'],
+  setupFilesAfterEnv: ['<rootDir>/src/__tests__/setup/jest.setup.js'],
 
   // Coverage configuration
   collectCoverageFrom: [
@@ -82,6 +82,6 @@ module.exports = {
   transformIgnorePatterns: ['/node_modules/'],
 
   // Global test setup
-  globalSetup: '<rootDir>/src/__tests__/setup/global.setup.ts',
-  globalTeardown: '<rootDir>/src/__tests__/setup/global.teardown.ts',
+  globalSetup: '<rootDir>/src/__tests__/setup/global.setup.js',
+  globalTeardown: '<rootDir>/src/__tests__/setup/global.teardown.js',
 };

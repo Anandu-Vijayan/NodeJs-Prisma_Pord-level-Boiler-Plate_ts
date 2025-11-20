@@ -1,5 +1,6 @@
 const request = require('supertest');
-const app = require('../app');
+const appModule = require('../app');
+const app = appModule.default || appModule;
 const { connectTestDB, closeTestDB } = require('./utils/testHelpers');
 
 describe('Health Check Endpoint', () => {

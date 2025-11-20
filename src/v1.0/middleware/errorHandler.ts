@@ -34,6 +34,16 @@ const errorHandler = (
     return sendError(res, err.message, err.statusCode);
   }
 
+  // CastError (invalid ObjectId) - typically from MongoDB/Mongoose
+  if (err.name === 'CastError') {
+    return sendError(res, 'Resource not found', 404);
+  }
+
+  // MongoDB duplicate key error (code 11000)
+  if (err.code === 11000) {
+    return sendError(res, 'Duplicate field value entered', 400);
+  }
+
   // Prisma errors
   // P2002: Unique constraint violation (duplicate key)
   if (err.code === 'P2002') {
@@ -84,6 +94,14 @@ const errorHandler = (
       message: e.msg,
     }));
     return sendError(res, message, 400, errors);
+  }
+
+  // Mongoose/other ValidationError with errors object
+  if (err.name === 'ValidationError' && err.errors && typeof err.errors === 'object') {
+    const errorMessages = Object.values(err.errors as Record<string, any>)
+      .map((e: any) => e.message || e.msg)
+      .join(', ');
+    return sendError(res, errorMessages, 400);
   }
 
   const statusCode = error.statusCode || 500;

@@ -1,10 +1,19 @@
-const errorHandler = require('../../v1.0/middleware/errorHandler');
-const { sendError } = require('../../utilities/response');
-
-// Mock the response utility
+// Mock the response utility BEFORE importing errorHandler
 jest.mock('../../utilities/response', () => ({
   sendError: jest.fn(),
 }));
+
+// Import errorHandler - handle both default and named exports
+let errorHandler;
+try {
+  const errorHandlerModule = require('../../v1.0/middleware/errorHandler');
+  errorHandler = errorHandlerModule.default || errorHandlerModule;
+} catch (e) {
+  // If require fails, try dynamic import (for TypeScript)
+  errorHandler = require('../../v1.0/middleware/errorHandler');
+}
+
+const { sendError } = require('../../utilities/response');
 
 describe('Error Handler Middleware', () => {
   let mockReq;
@@ -33,7 +42,6 @@ describe('Error Handler Middleware', () => {
       mockRes,
       'Resource not found',
       404,
-      undefined,
     );
   });
 
@@ -49,7 +57,6 @@ describe('Error Handler Middleware', () => {
       mockRes,
       'Duplicate field value entered',
       400,
-      undefined,
     );
   });
 
@@ -68,7 +75,6 @@ describe('Error Handler Middleware', () => {
       mockRes,
       expect.stringContaining('Email is required'),
       400,
-      undefined,
     );
   });
 

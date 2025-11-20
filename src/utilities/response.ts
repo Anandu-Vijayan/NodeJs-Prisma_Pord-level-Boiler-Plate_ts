@@ -13,7 +13,7 @@ export const sendSuccess = <T = any>(
   const response: ApiResponse<T> = {
     success: true,
     message,
-    data: data || undefined,
+    data: data ?? null,
   };
   res.status(statusCode).json(response);
 };

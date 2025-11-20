@@ -33,8 +33,9 @@ router.get('/health', async (_req: Request, res: Response) => {
   let dbError = null;
 
   try {
-    // Test database connection
-    await prisma.$queryRaw`SELECT 1`;
+    // Test database connection (MongoDB doesn't support $queryRaw)
+    // Use a simple findOne operation instead
+    await prisma.user.findFirst();
     dbStatus = 'connected';
   } catch (error) {
     dbStatus = 'disconnected';
