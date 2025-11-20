@@ -16,6 +16,7 @@ import requestLogger from './v1.0/middleware/requestLogger';
 import errorHandler from './v1.0/middleware/errorHandler';
 import notFound from './v1.0/middleware/notFound';
 import routes from './route';
+import { startAutoSeed, stopAutoSeed } from './config/autoSeed';
 
 // Initialize Express app
 const app: Express = express();
@@ -56,7 +57,7 @@ securityMiddleware(app);
 
 // Body parser (must be before routes)
 app.use(express.json({
-  limit: '10mb',
+  limit: '10mb', 
   strict: true,
   type: 'application/json',
 }));
@@ -80,18 +81,29 @@ app.use(errorHandler);
 
 // Start server (only if not in test mode)
 let server: ReturnType<typeof app.listen> | undefined;
+let autoSeedInterval: NodeJS.Timeout | null = null;
+
 if (config.NODE_ENV !== 'test') {
   server = app.listen(config.PORT, () => {
     logger.info(`Server running in ${config.NODE_ENV} mode on port ${config.PORT}`);
     logger.info(`Environment: ${config.NODE_ENV}`);
     logger.info(`Process ID: ${process.pid}`);
   });
+
+  // Start periodic auto-seeding if enabled
+  const intervalMinutes = parseInt(process.env.PRISMA_AUTO_SEED_INTERVAL || '60', 10);
+  autoSeedInterval = startAutoSeed(intervalMinutes);
 } 
 
 // Graceful shutdown handler (only if server is running)
 if (server) {
   const gracefulShutdown = (signal: string): void => {
     logger.info(`${signal} received. Starting graceful shutdown...`);
+
+    // Stop auto-seeding
+    if (autoSeedInterval) {
+      stopAutoSeed(autoSeedInterval);
+    }
 
     server?.close(async () => {
       logger.info('HTTP server closed');
@@ -123,7 +135,7 @@ if (server) {
     server?.close(() => {
       process.exit(1);
     });
-  });
+  }); 
 
   // Handle uncaught exceptions
   process.on('uncaughtException', (err: Error) => {

@@ -9,6 +9,7 @@ import swaggerUi from 'swagger-ui-express';
 import swaggerSpec from '../config/swagger';
 import { prisma } from '../config/database';
 import v1Routes from '../v1.0/routes';
+import { userSelectMinimal } from '../v1.0/models/userSelect';
 
 const router = express.Router();
 
@@ -34,8 +35,10 @@ router.get('/health', async (_req: Request, res: Response) => {
 
   try {
     // Test database connection (MongoDB doesn't support $queryRaw)
-    // Use a simple findOne operation instead
-    await prisma.user.findFirst();
+    // Use a simple findFirst operation instead (minimal select, no password)
+    await prisma.user.findFirst({
+      select: userSelectMinimal,
+    });
     dbStatus = 'connected';
   } catch (error) {
     dbStatus = 'disconnected';

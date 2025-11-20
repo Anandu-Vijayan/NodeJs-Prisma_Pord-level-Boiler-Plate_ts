@@ -152,6 +152,24 @@ router.get('/auth/me', protect, authController.getMe);
 
 /**
  * @swagger
+ * /api/v1.0/auth/change-password:
+ *   put:
+ *     summary: Change password (v1.0)
+ *     tags: [Auth v1.0]
+ *     security:
+ *       - bearerAuth: []
+ */
+router.put(
+  '/auth/change-password',
+  protect,
+  rules.password('currentPassword', 6),
+  rules.password('newPassword', 6),
+  validate,
+  authController.changePassword,
+);
+
+/**
+ * @swagger
  * /api/v1.0/auth/logout:
  *   post:
  *     summary: Logout user (v1.0)

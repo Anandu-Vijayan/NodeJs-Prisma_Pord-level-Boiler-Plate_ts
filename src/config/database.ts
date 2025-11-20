@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import logger from '../utilities/logger';
 import { runMigration, isAutoMigrationEnabled } from './migration';
+import { checkAndSeed, isAutoSeedEnabled } from './autoSeed';
 
 // PrismaClient is attached to the `global` object in development to prevent
 // exhausting your database connection limit.
@@ -26,6 +27,11 @@ const connectDB = async (): Promise<void> => {
     // Test the connection
     await prisma.$connect();
     logger.info('Database connected successfully');
+
+    // Run auto-seed if enabled (after connecting)
+    if (isAutoSeedEnabled() && process.env.NODE_ENV !== 'test') {
+      await checkAndSeed();
+    }
 
     // Graceful shutdown (only if not in test mode)
     if (process.env.NODE_ENV !== 'test') {

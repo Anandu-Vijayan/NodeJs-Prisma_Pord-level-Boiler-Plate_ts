@@ -9,6 +9,7 @@ import { createUserWithPassword } from '../models/User';
 import { asyncHandler } from '../../utilities/asyncHandler';
 import { sendSuccess, sendError } from '../../utilities/response';
 import { AuthenticatedRequest } from '../../types/express';
+import { userSelectFields, userSelectMinimal } from '../models/userSelect';
 
 /**
  * @desc    Get all users
@@ -17,15 +18,7 @@ import { AuthenticatedRequest } from '../../types/express';
  */
 export const getUsers = asyncHandler(async (_req: AuthenticatedRequest, res: Response) => {
   const users = await prisma.user.findMany({
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: userSelectFields,
   });
   sendSuccess(res, users, 'Users retrieved successfully');
 });
@@ -38,15 +31,7 @@ export const getUsers = asyncHandler(async (_req: AuthenticatedRequest, res: Res
 export const getUser = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: userSelectFields,
   });
 
   if (!user) {
@@ -73,15 +58,7 @@ export const createUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
   } else {
     const user = await prisma.user.create({
       data: userData,
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: userSelectFields,
     });
     sendSuccess(res, user, 'User created successfully', 201);
   }
@@ -95,9 +72,10 @@ export const createUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
 export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { password, ...updateData } = req.body;
   
-  // Check if user exists
+  // Check if user exists (minimal select for existence check)
   const existingUser = await prisma.user.findUnique({
     where: { id: req.params.id },
+    select: userSelectMinimal,
   });
 
   if (!existingUser) {
@@ -112,15 +90,7 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
   const user = await prisma.user.update({
     where: { id: req.params.id },
     data: dataToUpdate,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: userSelectFields,
   });
 
   sendSuccess(res, user, 'User updated successfully');
@@ -132,8 +102,10 @@ export const updateUser = asyncHandler(async (req: AuthenticatedRequest, res: Re
  * @access  Private/Admin
  */
 export const deleteUser = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  // Check if user exists (minimal select for existence check)
   const user = await prisma.user.findUnique({
     where: { id: req.params.id },
+    select: userSelectMinimal,
   });
 
   if (!user) {

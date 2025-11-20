@@ -5,6 +5,7 @@ import { prisma } from '../../config/database';
 import { asyncHandler } from '../../utilities/asyncHandler';
 import { sendError } from '../../utilities/response';
 import { AuthenticatedRequest } from '../../types/express';
+import { userSelectFields } from '../models/userSelect';
 
 /**
  * Protect routes - Verify JWT token
@@ -29,18 +30,10 @@ export const protect = asyncHandler(async (req: AuthenticatedRequest, res: Respo
     // Verify token
     const decoded = jwt.verify(token, config.JWT_SECRET) as { id: string };
 
-    // Get user from token
+    // Get user from token (exclude password)
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-        isActive: true,
-        createdAt: true,
-        updatedAt: true,
-      },
+      select: userSelectFields,
     });
 
     if (!user) {

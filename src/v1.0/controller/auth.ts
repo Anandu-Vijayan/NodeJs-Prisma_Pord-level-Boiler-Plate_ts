@@ -12,6 +12,7 @@ import { BadRequestError, UnauthorizedError } from '../../utilities/errors';
 import { generateToken } from '../helpers/auth';
 import config from '../../config/env';
 import { AuthenticatedRequest } from '../../types/express';
+import { userSelectFields, userSelectWithPassword, userSelectMinimal } from '../models/userSelect';
 
 /**
  * @desc    Register user
@@ -21,9 +22,10 @@ import { AuthenticatedRequest } from '../../types/express';
 export const register = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
   const { name, email, password } = req.body;
 
-  // Check if user exists
+  // Check if user exists (minimal select for existence check)
   const userExists = await prisma.user.findUnique({
     where: { email },
+    select: userSelectMinimal,
   });
   
   if (userExists) {
@@ -68,9 +70,10 @@ export const login = asyncHandler(async (req: AuthenticatedRequest, res: Respons
     throw new BadRequestError('Please provide email and password');
   }
 
-  // Check for user
+  // Check for user (need password for verification)
   const user = await prisma.user.findUnique({
     where: { email },
+    select: userSelectWithPassword,
   });
 
   if (!user || !user.password) {
@@ -118,18 +121,60 @@ export const getMe = asyncHandler(async (req: AuthenticatedRequest, res: Respons
 
   const user = await prisma.user.findUnique({
     where: { id: req.user.id },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: userSelectFields,
   });
 
   sendSuccess(res, user, 'User retrieved successfully');
+});
+
+/**
+ * @desc    Change password
+ * @route   PUT /api/v1.0/auth/change-password
+ * @access  Private
+ */
+export const changePassword = asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
+  if (!req.user) {
+    throw new UnauthorizedError('User not authenticated');
+  }
+
+  const { currentPassword, newPassword } = req.body;
+
+  // Validate input
+  if (!currentPassword || !newPassword) {
+    throw new BadRequestError('Please provide current password and new password');
+  }
+
+  if (newPassword.length < 6) {
+    throw new BadRequestError('New password must be at least 6 characters long');
+  }
+
+  // Get user with password
+  const user = await prisma.user.findUnique({
+    where: { id: req.user.id },
+    select: userSelectWithPassword,
+  });
+
+  if (!user || !user.password) {
+    throw new UnauthorizedError('User not found or has no password set');
+  }
+
+  // Verify current password
+  const isMatch = await comparePassword(currentPassword, user.password);
+  if (!isMatch) {
+    throw new UnauthorizedError('Current password is incorrect');
+  }
+
+  // Hash new password
+  const { hashPassword } = await import('../models/User');
+  const hashedNewPassword = await hashPassword(newPassword);
+
+  // Update password
+  await prisma.user.update({
+    where: { id: req.user.id },
+    data: { password: hashedNewPassword },
+  });
+
+  sendSuccess(res, null, 'Password changed successfully');
 });
 
 /**

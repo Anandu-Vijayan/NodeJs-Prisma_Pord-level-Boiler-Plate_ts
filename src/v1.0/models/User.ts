@@ -1,5 +1,6 @@
 import { User as PrismaUser } from '@prisma/client';
 import bcrypt from 'bcryptjs';
+import { userSelectFields } from './userSelect';
 
 export interface IUser extends PrismaUser {
   comparePassword(candidatePassword: string): Promise<boolean>;
@@ -33,15 +34,7 @@ export const createUserWithPassword = async (
       ...data,
       password: hashedPassword,
     },
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      role: true,
-      isActive: true,
-      createdAt: true,
-      updatedAt: true,
-    },
+    select: userSelectFields,
   });
 
   return user;
